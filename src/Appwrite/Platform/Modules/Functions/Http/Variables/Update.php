@@ -46,7 +46,7 @@ class Update extends Base
                 namespace: 'functions',
                 group: 'variables',
                 name: 'updateVariable',
-                description: <<<EOT
+                description: <<<'EOT'
                 Update variable by its unique ID.
                 EOT,
                 auth: [AuthType::ADMIN, AuthType::KEY],
@@ -54,14 +54,14 @@ class Update extends Base
                     new SDKResponse(
                         code: Response::STATUS_CODE_OK,
                         model: Response::MODEL_VARIABLE,
-                    )
+                    ),
                 ]
             ))
             ->param('functionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Function unique ID.', false, ['dbForProject'])
             ->param('variableId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Variable unique ID.', false, ['dbForProject'])
             ->param('key', null, new Nullable(new Text(255, 0)), 'Variable key. Max length: 255 chars.', true)
             ->param('value', null, new Nullable(new Text(8192, 0)), 'Variable value. Max length: 8192 chars.', true)
-            ->param('secret', null, new Nullable(new Boolean()), 'Secret variables can be updated or deleted, but only functions can read them during build and runtime.', true)
+            ->param('secret', null, new Nullable(new Boolean), 'Secret variables can be updated or deleted, but only functions can read them during build and runtime.', true)
             ->inject('response')
             ->inject('queueForEvents')
             ->inject('dbForProject')
@@ -101,18 +101,18 @@ class Update extends Base
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID);
         }
 
-        $updates = new Document();
+        $updates = new Document;
 
-        if (!\is_null($key)) {
+        if (! \is_null($key)) {
             $updates->setAttribute('key', $key);
             $updates->setAttribute('search', implode(' ', [$variableId, $function->getId(), $key, 'function']));
         }
 
-        if (!\is_null($value)) {
+        if (! \is_null($value)) {
             $updates->setAttribute('value', $value);
         }
 
-        if (!\is_null($secret)) {
+        if (! \is_null($secret)) {
             $updates->setAttribute('secret', $secret);
         }
 
@@ -123,14 +123,14 @@ class Update extends Base
         }
 
         $function->setAttribute('live', false);
-        $dbForProject->updateDocument('functions', $function->getId(), new Document(['live' => false]));
+        $dbForProject->skipFilters(fn () => $dbForProject->updateDocument('functions', $function->getId(), new Document(['live' => false])), ['subQueryVariables', 'subQueryProjectVariables']);
 
         // Inform scheduler to pull the latest changes
         $schedule = $dbForPlatform->getDocument('schedules', $function->getAttribute('scheduleId'));
         $schedule
             ->setAttribute('resourceUpdatedAt', DateTime::now())
             ->setAttribute('schedule', $function->getAttribute('schedule'))
-            ->setAttribute('active', !empty($function->getAttribute('schedule')) && !empty($function->getAttribute('deploymentId')));
+            ->setAttribute('active', ! empty($function->getAttribute('schedule')) && ! empty($function->getAttribute('deploymentId')));
         $authorization->skip(fn () => $dbForPlatform->updateDocument('schedules', $schedule->getId(), new Document([
             'resourceUpdatedAt' => $schedule->getAttribute('resourceUpdatedAt'),
             'schedule' => $schedule->getAttribute('schedule'),

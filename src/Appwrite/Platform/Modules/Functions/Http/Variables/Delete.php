@@ -43,7 +43,7 @@ class Delete extends Base
                 namespace: 'functions',
                 group: 'variables',
                 name: 'deleteVariable',
-                description: <<<EOT
+                description: <<<'EOT'
                 Delete a variable by its unique ID.
                 EOT,
                 auth: [AuthType::ADMIN, AuthType::KEY],
@@ -51,7 +51,7 @@ class Delete extends Base
                     new SDKResponse(
                         code: Response::STATUS_CODE_NOCONTENT,
                         model: Response::MODEL_NONE,
-                    )
+                    ),
                 ],
                 contentType: ContentType::NONE
             ))
@@ -88,14 +88,14 @@ class Delete extends Base
         $dbForProject->deleteDocument('variables', $variable->getId());
 
         $function->setAttribute('live', false);
-        $dbForProject->updateDocument('functions', $function->getId(), new Document(['live' => false]));
+        $dbForProject->skipFilters(fn () => $dbForProject->updateDocument('functions', $function->getId(), new Document(['live' => false])), ['subQueryVariables', 'subQueryProjectVariables']);
 
         // Inform scheduler to pull the latest changes
         $schedule = $dbForPlatform->getDocument('schedules', $function->getAttribute('scheduleId'));
         $schedule
             ->setAttribute('resourceUpdatedAt', DateTime::now())
             ->setAttribute('schedule', $function->getAttribute('schedule'))
-            ->setAttribute('active', !empty($function->getAttribute('schedule')) && !empty($function->getAttribute('deploymentId')));
+            ->setAttribute('active', ! empty($function->getAttribute('schedule')) && ! empty($function->getAttribute('deploymentId')));
         $authorization->skip(fn () => $dbForPlatform->updateDocument('schedules', $schedule->getId(), new Document([
             'resourceUpdatedAt' => $schedule->getAttribute('resourceUpdatedAt'),
             'schedule' => $schedule->getAttribute('schedule'),
