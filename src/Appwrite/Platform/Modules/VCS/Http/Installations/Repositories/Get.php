@@ -69,7 +69,7 @@ class Get extends Action
         }
 
         $providerInstallationId = $installation->getAttribute('providerInstallationId');
-        $privateKey = System::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY');
+        $privateKey = str_replace('\n', "\n", System::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY', ''));
         $githubAppId = System::getEnv('_APP_VCS_GITHUB_APP_ID');
         $github->initializeVariables($providerInstallationId, $privateKey, $githubAppId);
 

@@ -73,7 +73,7 @@ class Create extends Action
         }
 
         $githubAppId = System::getEnv('_APP_VCS_GITHUB_APP_ID');
-        $privateKey = System::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY');
+        $privateKey = str_replace('\n', "\n", System::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY', ''));
         $parsedPayload = $github->getEvent($event, $payload);
 
         match ($event) {

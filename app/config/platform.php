@@ -23,6 +23,7 @@ return [
         System::getEnv('_APP_DOMAIN', 'localhost'),
         System::getEnv('_APP_CONSOLE_DOMAIN', 'localhost'),
         System::getEnv('_APP_MIGRATION_HOST'),
+        ...array_map('trim', explode(',', System::getEnv('_APP_CONSOLE_HOSTNAMES', ''))),
     ])),
     'schemas' => \array_filter(\explode(',', System::getEnv('_APP_CONSOLE_SCHEMA', ''))),
     'platformName' => APP_EMAIL_PLATFORM_NAME,
