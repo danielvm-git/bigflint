@@ -13,6 +13,11 @@ class Github extends OAuth2
     protected array $user = [];
 
     /**
+     * @var array|null
+     */
+    protected ?array $emails = null;
+
+    /**
      * @var array
      */
     protected array $tokens = [];
@@ -122,9 +127,10 @@ class Github extends OAuth2
      */
     public function getUserEmail(string $accessToken): string
     {
-        $user = $this->getUser($accessToken);
+        $this->getUser($accessToken);
+        $this->fetchEmails($accessToken);
 
-        return $user['email'] ?? '';
+        return $this->user['email'] ?? '';
     }
 
     /**
@@ -138,9 +144,10 @@ class Github extends OAuth2
      */
     public function isEmailVerified(string $accessToken): bool
     {
-        $user = $this->getUser($accessToken);
+        $this->getUser($accessToken);
+        $this->fetchEmails($accessToken);
 
-        if ($user['verified'] ?? false) {
+        if ($this->user['verified'] ?? false) {
             return true;
         }
 
@@ -180,34 +187,44 @@ class Github extends OAuth2
     {
         if (empty($this->user)) {
             $this->user = \json_decode($this->request('GET', 'https://api.github.com/user', ['Authorization: token ' . \urlencode($accessToken)]), true);
-
-            $emails = $this->request('GET', 'https://api.github.com/user/emails', ['Authorization: token ' . \urlencode($accessToken)]);
-
-            $emails = \json_decode($emails, true);
-
-            $verifiedEmail = null;
-            $primaryEmail = null;
-
-            foreach ($emails as $email) {
-                if (isset($email['verified']) && $email['verified'] === true) {
-                    $verifiedEmail = $email;
-
-                    if (isset($email['primary']) && $email['primary'] === true) {
-                        $primaryEmail = $email;
-                    }
-                }
-            }
-
-            if (!empty($primaryEmail)) {
-                $this->user['email'] = $primaryEmail['email'];
-                $this->user['verified'] = $primaryEmail['verified'];
-            } elseif (!empty($verifiedEmail)) {
-                $this->user['email'] = $verifiedEmail['email'];
-                $this->user['verified'] = $verifiedEmail['verified'];
-            }
         }
 
         return $this->user;
+    }
+
+    /**
+     * Fetches and merges email data into $this->user. Requires user:email scope.
+     * Only called by getUserEmail() and isEmailVerified().
+     */
+    protected function fetchEmails(string $accessToken): void
+    {
+        if ($this->emails !== null) {
+            return;
+        }
+
+        $emails = $this->request('GET', 'https://api.github.com/user/emails', ['Authorization: token ' . \urlencode($accessToken)]);
+        $this->emails = \json_decode($emails, true) ?? [];
+
+        $verifiedEmail = null;
+        $primaryEmail = null;
+
+        foreach ($this->emails as $email) {
+            if (isset($email['verified']) && $email['verified'] === true) {
+                $verifiedEmail = $email;
+
+                if (isset($email['primary']) && $email['primary'] === true) {
+                    $primaryEmail = $email;
+                }
+            }
+        }
+
+        if (!empty($primaryEmail)) {
+            $this->user['email'] = $primaryEmail['email'];
+            $this->user['verified'] = $primaryEmail['verified'];
+        } elseif (!empty($verifiedEmail)) {
+            $this->user['email'] = $verifiedEmail['email'];
+            $this->user['verified'] = $verifiedEmail['verified'];
+        }
     }
 
     public function createRepository(string $accessToken, string $repositoryName, bool $private): array

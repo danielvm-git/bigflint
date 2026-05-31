@@ -282,7 +282,7 @@ class Builds extends Action
         if ($isVcsEnabled) {
             $installation = $dbForPlatform->getDocument('installations', $installationId);
             $providerInstallationId = $installation->getAttribute('providerInstallationId');
-            $privateKey = System::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY');
+            $privateKey = str_replace('\n', "\n", System::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY', ''));
             $githubAppId = System::getEnv('_APP_VCS_GITHUB_APP_ID');
 
             $github->initializeVariables($providerInstallationId, $privateKey, $githubAppId);
@@ -367,6 +367,12 @@ class Builds extends Action
                 $tmpDirectory = '/tmp/builds/' . $deploymentId . '/code';
                 $rootDirectory = $resource->getAttribute('providerRootDirectory', '');
                 $rootDirectory = \trim($rootDirectory, '/');
+                while (\str_starts_with($rootDirectory, './')) {
+                    $rootDirectory = \substr($rootDirectory, 2);
+                }
+                if ($rootDirectory === '.') {
+                    $rootDirectory = '';
+                }
                 if ($rootDirectory !== '' && \preg_match('#(^|/)\.\.(/|$)#', $rootDirectory)) {
                     throw new \Exception('Invalid root directory');
                 }
