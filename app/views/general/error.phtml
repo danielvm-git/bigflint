@@ -7,7 +7,7 @@ $type = $this->getParam('type', 'general_server_error');
 $code = $this->getParam('code', 500);
 $message = $this->getParam('message', '');
 $trace = $this->getParam('trace', []);
-$title = $this->getParam('title', 'Error'); 
+$title = $this->getParam('title', 'Error');
 $exception = $this->getParam('exception', null);
 
 $isSimpleMessage = true;
@@ -23,16 +23,16 @@ if (System::getEnv('_APP_ENV') === 'development') {
     $hostname = 'localhost';
 }
 
-$url = $protocol . '://' . $hostname;
+$url = $protocol.'://'.$hostname;
 
-if($exception !== null && method_exists($exception, 'getCTAs')) {
+if ($exception !== null && method_exists($exception, 'getCTAs')) {
     foreach ($exception->getCTAs() as $index => $cta) {
         $class = ($index === 0) ? 'bordered-button' : 'button';
-    
+
         $buttons[] = [
             'text' => $cta['label'],
             'url' => $cta['url'],
-            'class' => $class
+            'class' => $class,
         ];
     }
 }
@@ -40,10 +40,10 @@ if($exception !== null && method_exists($exception, 'getCTAs')) {
 switch ($type) {
     case 'proxy_error_override':
         $type = '';
-        $label = 'Error ' . $code;
-        
+        $label = 'Error '.$code;
+
         $message = $code >= 500 ? 'An unexpected server error occured.' : 'An unexpected client error occured.';
-        switch($code) {
+        switch ($code) {
             case 401:
                 $message = 'You must sign in to access this page.';
                 break;
@@ -60,7 +60,7 @@ switch ($type) {
                 $message = 'This page is not implemented yet.';
                 break;
         }
-        
+
         break;
     case 'function_execute_permission_missing':
         $label = 'Execution not permitted';
@@ -93,7 +93,7 @@ switch ($type) {
         $message = 'The page you\'re looking for doesn\'t exist.';
         break;
     default:
-        $label = 'Error ' . $code;
+        $label = 'Error '.$code;
         $message = $message;
         $isSimpleMessage = false;
         break;
@@ -471,59 +471,59 @@ switch ($type) {
         <div id="views-error" class="content <?php echo $isSimpleMessage ? 'large-error' : 'small-error' ?>">
             <div class="center"><span class="<?php echo $this->print($labelClass); ?>"><?php echo $this->print($label); ?></span></div>
             <h1><?php echo $this->print($message); ?></h1>
-            <?php if (!empty($type)): ?>
+            <?php if (! empty($type)) { ?>
                 <div class="center">
                     <span class='type'><?php echo $this->print($type); ?></span>
                 </div>
-            <?php endif; ?>
+            <?php } ?>
             <div class="center" style="margin-top: 20px;">
-                <?php if (!empty($buttons)): ?>
-                    <?php foreach ($buttons as $button): ?>
+                <?php if (! empty($buttons)) { ?>
+                    <?php foreach ($buttons as $button) { ?>
                         <a href="<?php echo htmlspecialchars($button['url']); ?>">
                             <button class="<?php echo htmlspecialchars($button['class']); ?>">
                                 <?php echo htmlspecialchars($button['text']); ?>
                             </button>
                         </a>
-                    <?php endforeach; ?>
-                <?php endif; ?>
+                    <?php } ?>
+                <?php } ?>
                     
-                <?php if ($development) : ?>
+                <?php if ($development) { ?>
                         <button class="<?php echo count($buttons) === 0 ? 'bordered-button' : 'button' ?>" onclick="openTraceView()">View error trace</button>
-                <?php endif; ?>
+                <?php } ?>
             </div>
         </div>
 
-        <?php if ($development) : ?>
+        <?php if ($development) { ?>
             <div id="views-trace" style="display: none;" class="error-trace">
                 <button class="back-button" onclick="openErrorView()">
                     Back
                 </button>
                 <div class="trace-grid-header">Error trace</div>
-                <?php foreach ($trace as $index => $traceItem): ?>
+                <?php foreach ($trace as $index => $traceItem) { ?>
                     <div class="trace-grid">
-                        <?php if (isset($traceItem['file'])): ?>
+                        <?php if (isset($traceItem['file'])) { ?>
                             <div class="trace-label">file</div>
                             <div class="trace-value"><?php echo $this->print($traceItem['file']); ?></div>
-                        <?php endif; ?>
+                        <?php } ?>
 
-                        <?php if (isset($traceItem['line'])): ?>
+                        <?php if (isset($traceItem['line'])) { ?>
                             <div class="trace-label">line</div>
                             <div class="trace-value"><?php echo $this->print($traceItem['line']); ?></div>
-                        <?php endif; ?>
+                        <?php } ?>
 
-                        <?php if (isset($traceItem['function'])): ?>
+                        <?php if (isset($traceItem['function'])) { ?>
                             <div class="trace-label">function</div>
                             <div class="trace-value"><?php echo $this->print($traceItem['function']); ?></div>
-                        <?php endif; ?>
+                        <?php } ?>
 
-                        <?php if (isset($traceItem['args'])): ?>
+                        <?php if (isset($traceItem['args'])) { ?>
                             <div class="trace-label">args</div>
-                            <div class="trace-args"><pre><?php echo $this->print(\var_export($traceItem['args'], true)); ?></pre></div>
-                        <?php endif; ?>
+                            <div class="trace-args"><pre><?php echo $this->print(\print_r($traceItem['args'], true)); ?></pre></div>
+                        <?php } ?>
                     </div>
-                <?php endforeach; ?>
+                <?php } ?>
             </div>
-        <?php endif; ?>
+        <?php } ?>
     </div>
 
     <script>
