@@ -164,7 +164,7 @@ return [
                 'buildCommand' => 'npm run build',
                 'installCommand' => 'npm install',
                 'outputDirectory' => './dist',
-                'startCommand' => 'bash helpers/server.sh',
+                'startCommand' => 'bash /usr/local/server/helpers/server.sh',
                 'fallbackFile' => 'index.html'
             ]
         ]

@@ -570,6 +570,10 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
             $extension = str_ends_with($source, '.tar') ? 'tar' : 'tar.gz';
 
             $startCommand = $runtime['startCommand'];
+            if (! empty($deployment->getAttribute('startCommand', ''))) {
+                $startCommand = 'cd /usr/local/server/src/function/ && '.str_replace(['"', '`', '$'], ['\\"', '\\`', '\\$'], $deployment->getAttribute('startCommand', ''));
+            }
+
             if ($type === 'site') {
                 $frameworks = Config::getParam('frameworks', []);
                 $framework = $frameworks[$resource->getAttribute('framework', '')] ?? null;
@@ -580,10 +584,6 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
                         $startCommand = $adapter['startCommand'];
                     }
                 }
-            }
-
-            if (! empty($deployment->getAttribute('startCommand', ''))) {
-                $startCommand = 'cd /usr/local/server/src/function/ && '.str_replace(['"', '`', '$'], ['\\"', '\\`', '\\$'], $deployment->getAttribute('startCommand', ''));
             }
 
             $runtimeEntrypoint = match ($version) {
