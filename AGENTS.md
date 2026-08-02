@@ -127,6 +127,27 @@ Cross-cutting identifiers (`project.id`, `function.id`, `user.id`) live at the t
 
 For bumping patch versions (e.g., `1.9.0` -> `1.9.1`), follow the checklist in `.claude/skills/patch-release-checklist/SKILL.md`. It covers the 4 files that must be updated, console image bumps, CHANGES.md updates, and common pitfalls to avoid.
 
+## Observability
+
+Appwrite uses Utopia's built-in structured logging, distributed tracing (Span), and telemetry (histograms, counters, gauges).
+
+| What | Command |
+|------|---------|
+| View service logs | `docker compose logs -f <service>` (add `-f` to follow) |
+| View appwrite logs filtered | `docker compose logs appwrite \| grep -E "http.response\|error\|Exception"` |
+| Health check (CLI) | `docker compose ps \| grep healthy` |
+| Health check (API) | `curl -H "X-Appwrite-Project: console" -H "X-Appwrite-Key: <key>" http://localhost/v1/health` |
+| Doctor diagnostics | `docker compose exec appwrite php bin/doctor` (requires running Swoole) |
+| Queue stats | `docker compose exec appwrite php bin/queue-count-success`, `queue-count-failed`, `queue-count-processing` |
+| Queue retry | `docker compose exec appwrite php bin/queue-retry` |
+| DB connection check | `docker compose exec mongodb mongosh --eval "db.runCommand({ping:1})"` |
+| DB replica set check | `docker compose exec mongodb mongosh --eval "rs.status().ok"` |
+| View metrics (telemetry) | Utopia telemetry exports via `app/init/telemetry.php` — adapters: None (default), Prometheus, OpenTelemetry |
+| Distributed tracing | Utopia Span — trace IDs flow through `app/init/span.php`; sampler at `app/init/span.php` controls export |
+| View runtime containers | `docker ps --filter "network=runtimes"` |
+| Log format | Structured JSON via Utopia logger: `{level, timestamp, message, http.method, http.path, http.response.code, ...}` |
+| Sensitive data | Never log tokens, secrets, or PII — Utopia's logger masks configured fields via `$log->setMasked()` |
+
 ## Cross-repo context
 
 Appwrite is the base server for `appwrite/cloud`. Changes to the Action pattern, module structure, DI system, or response models affect cloud. The `feat-dedicated-db` feature spans cloud, edge, and console.
