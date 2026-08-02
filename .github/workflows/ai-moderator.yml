@@ -20,9 +20,14 @@ permissions:
   pull-requests: write
   discussions: write
 
+concurrency:
+  group: ai-moderator-${{ github.event.issue.number || github.event.pull_request.number || github.event.discussion.number }}
+  cancel-in-progress: true
+
 jobs:
   moderate:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - name: AI Moderator
         uses: github/ai-moderator@81159c370785e295c97461ade67d7c33576e9319 # v1.1.4
